@@ -204,7 +204,7 @@ describe("E2E: MCP Tool Pipeline", () => {
   });
 
   describe("x402_check_balance", () => {
-    it("should return wallet balance and budget info", async () => {
+    it("should return wallet balance and active endpoint policies", async () => {
       const balanceTool = findTool(tools, "x402_check_balance");
       expect(balanceTool).toBeDefined();
       const result = await balanceTool!.handler({});
@@ -214,20 +214,27 @@ describe("E2E: MCP Tool Pipeline", () => {
       const parsed = JSON.parse(result.content[0].text);
       expect(parsed.walletAddress).toBeDefined();
       expect(parsed.usdcBalance).toBe("12.50");
-      expect(parsed.budgetRemaining).toBeDefined();
-      expect(parsed.budgetRemaining.perRequest).toBe(0.1);
-      expect(parsed.budgetRemaining.hourly).toBe(1.0);
-      expect(parsed.budgetRemaining.daily).toBe(10.0);
+      expect(parsed.endpointPolicies).toBeDefined();
+      expect(parsed.endpointPolicies).toHaveLength(1);
+      expect(parsed.endpointPolicies[0].endpoint).toBe("https://api.example.com");
+      expect(parsed.endpointPolicies[0].perRequestLimit).toBe(0.1);
+      expect(parsed.endpointPolicies[0].perHourLimit).toBe(1.0);
+      expect(parsed.endpointPolicies[0].perDayLimit).toBe(10.0);
+      expect(parsed.endpointPolicies[0].wcApprovalLimit).toBe(5.0);
     });
 
-    it("should reflect recent spending in remaining budget", async () => {
-      // Create a recent transaction of 0.5 USDC
-      await prisma.transaction.create({
-        data: createTestTransaction(userId, {
-          id: "tx-budget-1",
-          amount: 0.5,
-          status: "completed",
-        }),
+    it("should list multiple endpoint policies", async () => {
+      // Create a second endpoint policy
+      await prisma.endpointPolicy.create({
+        data: {
+          id: "00000000-0000-4000-a000-000000000021",
+          endpoint: "https://api.other.com",
+          perRequestLimit: 0.5,
+          perHourLimit: 5.0,
+          perDayLimit: 50.0,
+          wcApprovalLimit: 10.0,
+          userId,
+        },
       });
 
       const balanceTool = findTool(tools, "x402_check_balance");
@@ -235,8 +242,7 @@ describe("E2E: MCP Tool Pipeline", () => {
       const result = await balanceTool!.handler({});
       const parsed = JSON.parse(result.content[0].text);
 
-      expect(parsed.budgetRemaining.hourly).toBe(0.5); // 1.0 - 0.5
-      expect(parsed.budgetRemaining.daily).toBe(9.5); // 10.0 - 0.5
+      expect(parsed.endpointPolicies).toHaveLength(2);
     });
   });
 
