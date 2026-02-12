@@ -1,0 +1,103 @@
+import { prisma } from "@/lib/db";
+
+export interface PolicyCheckResult {
+  allowed: boolean;
+  reason?: string;
+  /** The per-request auto-approve limit (hot wallet signing). */
+  perRequestLimit?: number;
+  /** The max amount for WalletConnect-signed payments. Above this, payment is rejected. */
+  wcApprovalLimit?: number;
+}
+
+/**
+ * Check whether a payment of `amount` to `endpoint` is allowed
+ * under the user's spending policy.
+ */
+export async function checkPolicy(
+  amount: number,
+  endpoint: string,
+  userId: string,
+): Promise<PolicyCheckResult> {
+  const policy = await prisma.spendingPolicy.findUnique({
+    where: { userId },
+  });
+
+  if (!policy) {
+    return { allowed: false, reason: "No spending policy found for user" };
+  }
+
+  const limits = {
+    perRequestLimit: policy.perRequestLimit,
+    wcApprovalLimit: policy.wcApprovalLimit,
+  };
+
+  // --- WC approval limit (absolute max) ---
+  if (amount > policy.wcApprovalLimit) {
+    return {
+      allowed: false,
+      reason: `Amount $${amount.toFixed(2)} exceeds maximum approval limit of $${policy.wcApprovalLimit.toFixed(2)}`,
+      ...limits,
+    };
+  }
+
+  // --- Endpoint whitelist / blacklist ---
+  const whitelist: string[] = JSON.parse(policy.whitelistedEndpoints);
+  const blacklist: string[] = JSON.parse(policy.blacklistedEndpoints);
+
+  if (blacklist.length > 0 && blacklist.some((b) => endpoint.startsWith(b))) {
+    return {
+      allowed: false,
+      reason: `Endpoint "${endpoint}" is blacklisted`,
+      ...limits,
+    };
+  }
+
+  if (whitelist.length > 0 && !whitelist.some((w) => endpoint.startsWith(w))) {
+    return {
+      allowed: false,
+      reason: `Endpoint "${endpoint}" is not in the whitelist`,
+      ...limits,
+    };
+  }
+
+  // --- Rolling window checks ---
+  const now = new Date();
+  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+  const recentTransactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      status: { not: "failed" },
+      createdAt: { gte: oneDayAgo },
+    },
+    select: { amount: true, createdAt: true },
+  });
+
+  const hourlySpend = recentTransactions
+    .filter((tx) => tx.createdAt >= oneHourAgo)
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
+  if (hourlySpend + amount > policy.perHourLimit) {
+    return {
+      allowed: false,
+      reason: `Hourly spend ($${(hourlySpend + amount).toFixed(2)}) would exceed limit of $${policy.perHourLimit.toFixed(2)}`,
+      ...limits,
+    };
+  }
+
+  const dailySpend = recentTransactions.reduce(
+    (sum, tx) => sum + tx.amount,
+    0,
+  );
+
+  if (dailySpend + amount > policy.perDayLimit) {
+    return {
+      allowed: false,
+      reason: `Daily spend ($${(dailySpend + amount).toFixed(2)}) would exceed limit of $${policy.perDayLimit.toFixed(2)}`,
+      ...limits,
+    };
+  }
+
+  return { allowed: true, ...limits };
+}
