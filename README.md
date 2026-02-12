@@ -55,8 +55,8 @@ flowchart LR
 
 ```bash
 # Clone the repository
-git clone https://github.com/anthropics/pay-mcp.git
-cd pay-mcp
+git clone https://github.com/marcopesani/x402-mcp-gateway.git
+cd x402-mcp-gateway
 
 # Install dependencies
 npm install
