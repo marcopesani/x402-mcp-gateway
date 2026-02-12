@@ -51,9 +51,10 @@ model Transaction {
   network   String   @default("base")
   status    String   @default("pending")
   type      String   @default("payment")
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responsePayload String?
+  createdAt       DateTime @default(now())
 }
 
 model PendingPayment {
