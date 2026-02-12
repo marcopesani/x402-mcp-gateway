@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUsdcBalance } from "@/lib/hot-wallet";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function GET(request: NextRequest) {
+  const limited = rateLimit(getClientIp(request), 30);
+  if (limited) return limited;
   const address = request.nextUrl.searchParams.get("address");
 
   if (!address) {

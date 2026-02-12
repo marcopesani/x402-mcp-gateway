@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 /**
  * GET /api/transactions?userId=...&since=...&until=...
  * Fetch transaction history for a user with optional date range filtering.
  */
 export async function GET(request: NextRequest) {
+  const limited = rateLimit(getClientIp(request), 30);
+  if (limited) return limited;
   const userId = request.nextUrl.searchParams.get("userId");
   if (!userId) {
     return NextResponse.json({ error: "userId is required" }, { status: 400 });

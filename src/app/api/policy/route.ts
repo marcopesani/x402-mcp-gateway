@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 /**
  * GET /api/policy?userId=...
  * Fetch the current spending policy for a user.
  */
 export async function GET(request: NextRequest) {
+  const limited = rateLimit(getClientIp(request), 30);
+  if (limited) return limited;
   const userId = request.nextUrl.searchParams.get("userId");
   if (!userId) {
     return NextResponse.json({ error: "userId is required" }, { status: 400 });
@@ -38,6 +41,9 @@ export async function GET(request: NextRequest) {
  * Body: { userId, perRequestLimit?, perHourLimit?, perDayLimit?, whitelistedEndpoints?, blacklistedEndpoints? }
  */
 export async function PUT(request: NextRequest) {
+  const putLimited = rateLimit(getClientIp(request), 10);
+  if (putLimited) return putLimited;
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { parseUnits } from "viem";
 
@@ -49,9 +49,11 @@ export default function FundWallet({
     });
   }
 
-  if (isSuccess) {
-    onFunded?.();
-  }
+  useEffect(() => {
+    if (isSuccess) {
+      onFunded?.();
+    }
+  }, [isSuccess, onFunded]);
 
   return (
     <div className="flex flex-col gap-3">

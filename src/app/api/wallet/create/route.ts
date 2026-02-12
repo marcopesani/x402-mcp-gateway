@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { createHotWallet } from "@/lib/hot-wallet";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  const limited = rateLimit(getClientIp(request), 10);
+  if (limited) return limited;
+
   try {
     const { walletAddress } = await request.json();
 

@@ -1,10 +1,13 @@
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { createMcpServer } from "@/lib/mcp/server";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 // Stateless: create a fresh server + transport per request
 async function handleMcpRequest(
   request: Request,
 ): Promise<Response> {
+  const limited = rateLimit(getClientIp(request), 60);
+  if (limited) return limited;
   const url = new URL(request.url);
   const userId = url.pathname.split("/").at(-1);
 

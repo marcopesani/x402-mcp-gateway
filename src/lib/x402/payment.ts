@@ -24,10 +24,71 @@ import type { PaymentResult, PaymentRequirement } from "./types";
  * @param url    The x402-protected endpoint
  * @param userId The user whose hot wallet and policy to use
  */
+/**
+ * Validate a URL before making an HTTP request.
+ * Rejects non-http(s) protocols, private/internal IPs, and malformed URLs.
+ */
+function validateUrl(url: string): string | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return "Invalid URL format";
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    return `Unsupported protocol: ${parsed.protocol} (only http and https are allowed)`;
+  }
+
+  const hostname = parsed.hostname;
+
+  // Reject localhost and loopback
+  if (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname === "[::1]" ||
+    hostname === "0.0.0.0"
+  ) {
+    return "Requests to localhost/loopback addresses are not allowed";
+  }
+
+  // Reject private IPv4 ranges
+  const ipv4Match = hostname.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (ipv4Match) {
+    const [, a, b] = ipv4Match.map(Number);
+    if (
+      a === 10 ||                          // 10.0.0.0/8
+      (a === 172 && b >= 16 && b <= 31) || // 172.16.0.0/12
+      (a === 192 && b === 168) ||           // 192.168.0.0/16
+      a === 169 && b === 254               // 169.254.0.0/16 (link-local)
+    ) {
+      return "Requests to private/internal IP addresses are not allowed";
+    }
+  }
+
+  // Reject common internal hostnames
+  if (
+    hostname.endsWith(".local") ||
+    hostname.endsWith(".internal") ||
+    hostname.endsWith(".localhost")
+  ) {
+    return "Requests to internal hostnames are not allowed";
+  }
+
+  return null;
+}
+
 export async function executePayment(
   url: string,
   userId: string,
 ): Promise<PaymentResult> {
+  // Step 0: Validate URL
+  const urlError = validateUrl(url);
+  if (urlError) {
+    return { success: false, error: `URL validation failed: ${urlError}` };
+  }
+
   // Step 1: Initial request
   const initialResponse = await fetch(url);
 
