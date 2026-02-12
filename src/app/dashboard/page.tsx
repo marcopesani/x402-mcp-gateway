@@ -3,7 +3,7 @@ import HotWalletInfo from "@/components/HotWalletInfo";
 import McpServerUrl from "@/components/McpServerUrl";
 import SpendingSummary from "@/components/SpendingSummary";
 import SpendingChart from "@/components/SpendingChart";
-import SpendingPolicies from "@/components/SpendingPolicies";
+import EndpointPolicies from "@/components/EndpointPolicies";
 
 export default async function DashboardPage() {
   const user = await getAuthenticatedUser();
@@ -15,7 +15,7 @@ export default async function DashboardPage() {
       <SpendingSummary userId={userId} />
       <SpendingChart userId={userId} />
       <HotWalletInfo />
-      <SpendingPolicies userId={userId} />
+      <EndpointPolicies userId={userId} />
     </div>
   );
 }
