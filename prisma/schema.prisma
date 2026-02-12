@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String          @id @default(cuid())
+  walletAddress String          @unique
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  hotWallet     HotWallet?
+  spendingPolicy SpendingPolicy?
+  transactions  Transaction[]
+}
+
+model HotWallet {
+  id                  String   @id @default(cuid())
+  address             String   @unique
+  encryptedPrivateKey String
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model SpendingPolicy {
+  id                   String   @id @default(cuid())
+  perRequestLimit      Float    @default(0.10)
+  perHourLimit         Float    @default(1.00)
+  perDayLimit          Float    @default(10.00)
+  whitelistedEndpoints String   @default("[]")
+  blacklistedEndpoints String   @default("[]")
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  amount    Float
+  endpoint  String
+  txHash    String?
+  network   String   @default("base")
+  status    String   @default("pending")
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
