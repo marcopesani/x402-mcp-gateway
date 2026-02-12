@@ -13,6 +13,7 @@ interface Transaction {
   type: string;
   userId: string;
   createdAt: string;
+  responsePayload: string | null;
 }
 
 interface TransactionListProps {

@@ -225,6 +225,14 @@ export async function executePayment(
   }
   const paidResponse = await fetch(url, paidRequestInit);
 
+  // Read response body for storage (without consuming the original response)
+  let responsePayload: string | null = null;
+  try {
+    responsePayload = await paidResponse.clone().text();
+  } catch {
+    // If reading fails, leave as null — don't break the payment flow
+  }
+
   // Step 9: Extract settlement response and transaction hash from facilitator response
   const settlement = extractSettleResponse(paidResponse) ?? undefined;
   const txHash = settlement?.transaction ?? await extractTxHashFromResponse(paidResponse);
@@ -240,6 +248,7 @@ export async function executePayment(
       status: txStatus,
       type: "payment",
       userId,
+      responsePayload,
     },
   });
 

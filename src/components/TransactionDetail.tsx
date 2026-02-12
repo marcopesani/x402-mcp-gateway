@@ -13,6 +13,7 @@ interface Transaction {
   type: string;
   userId: string;
   createdAt: string;
+  responsePayload: string | null;
 }
 
 interface TransactionDetailProps {
@@ -87,6 +88,7 @@ export default function TransactionDetail({
 }: TransactionDetailProps) {
   const [verification, setVerification] = useState<VerificationResult | null>(null);
   const [verifying, setVerifying] = useState(false);
+  const [responseExpanded, setResponseExpanded] = useState(false);
 
   async function handleVerify() {
     setVerifying(true);
@@ -165,6 +167,30 @@ export default function TransactionDetail({
             <span className="text-[11px] text-red-600 dark:text-red-400">
               {verification.error ?? "Not confirmed on-chain"}
             </span>
+          )}
+        </div>
+      )}
+
+      {/* Response payload section */}
+      {transaction.responsePayload != null && (
+        <div className="mt-1">
+          <button
+            type="button"
+            onClick={() => setResponseExpanded(!responseExpanded)}
+            className="rounded bg-zinc-100 px-2 py-1 text-[11px] font-medium text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+          >
+            {responseExpanded ? "Hide response" : "Show response"}
+          </button>
+          {responseExpanded && (
+            <pre className="mt-2 overflow-x-auto rounded bg-zinc-100 p-3 text-xs text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
+              {(() => {
+                try {
+                  return JSON.stringify(JSON.parse(transaction.responsePayload!), null, 2);
+                } catch {
+                  return transaction.responsePayload;
+                }
+              })()}
+            </pre>
           )}
         </div>
       )}
