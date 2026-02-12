@@ -40,6 +40,7 @@ export default defineConfig({
           name: "e2e",
           setupFiles: ["src/test/setup.ts"],
           include: ["src/test/e2e/**/*.test.ts"],
+          fileParallelism: false,
         },
       },
     ],
