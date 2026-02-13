@@ -62,8 +62,8 @@ export async function fetchSession(): Promise<SIWESession | null> {
 export async function verifySiweMessage(
   args: SIWEVerifyMessageArgs | { data?: { accountAddress?: string; chainId?: string }; message?: string; signature?: string }
 ): Promise<boolean> {
-  const message = args.message ?? (args as { message?: string }).message;
-  const signature = args.signature ?? (args as { signature?: string }).signature;
+  const message = "message" in args ? args.message : undefined;
+  const signature = "signature" in args ? args.signature : undefined;
   if (!message || !signature) {
     return false;
   }
