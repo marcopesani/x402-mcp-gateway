@@ -4,22 +4,37 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check-types": "tsc --noEmit",
+    "test": "echo \"No frontend tests configured\"",
+    "test:e2e:cache": "synpress e2e/wallet-setup",
+    "test:e2e": "playwright test -c e2e/playwright.config.ts",
+    "test:e2e:headed": "playwright test -c e2e/playwright.config.ts --headed"
   },
   "dependencies": {
+    "@reown/appkit": "^1.8.18",
+    "@reown/appkit-adapter-wagmi": "^1.8.18",
+    "@repo/auth-contracts": "workspace:*",
+    "@simplewebauthn/browser": "^13.2.2",
+    "@tanstack/react-query": "^5.64.2",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "viem": "^2.46.3",
+    "wagmi": "^2.14.9"
   },
   "devDependencies": {
+    "@playwright/test": "1.58.2",
+    "@synthetixio/synpress": "4.1.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "playwright": "1.58.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

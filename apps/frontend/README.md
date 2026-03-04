@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend (`apps/frontend`)
 
-## Getting Started
+Next.js 16 App Router UI for Brevet auth/settings flows.
 
-First, run the development server:
+## Scripts
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```sh
+pnpm --filter frontend run dev
+pnpm --filter frontend run lint
+pnpm --filter frontend run check-types
+pnpm --filter frontend run build
+pnpm --filter frontend run test:e2e:cache
+pnpm --filter frontend run test:e2e
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Pages
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `/login`
+- `/signup`
+- `/settings/security`
+- `/settings/api-keys`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Browser E2E (Synpress)
 
-## Learn More
+The SIWX browser happy-path test lives in `e2e/tests/siwx-happy-path.spec.ts`.
 
-To learn more about Next.js, take a look at the following resources:
+Required services before running e2e:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- PostgreSQL/Redis (`pnpm db:up`)
+- backend API at `http://localhost:4000`
+- frontend app at `http://127.0.0.1:3000`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Optional env vars for e2e:
 
-## Deploy on Vercel
+- `E2E_BASE_URL` (default `http://127.0.0.1:3000`)
+- `E2E_WALLET_SEED` (defaults to the standard test mnemonic)
+- `E2E_WALLET_PASSWORD` (default `Tester@1234`)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Run:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```sh
+pnpm --filter frontend run test:e2e:cache
+pnpm --filter frontend run test:e2e
+```
+
+## Logging
+
+- Frontend backend calls propagate `x-request-id` to support backend correlation.
+- Backend request failures are logged as structured events (`frontend.backend.request.failed`).
+- `FRONTEND_LOG_LEVEL` and `FRONTEND_LOG_JSON` control server-side logging verbosity/format.
+- `NEXT_PUBLIC_FRONTEND_LOG_LEVEL` and `NEXT_PUBLIC_FRONTEND_LOG_JSON` control client-side logging.
