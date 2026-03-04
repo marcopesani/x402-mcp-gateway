@@ -36,7 +36,7 @@ const origin = backendEnv.frontendOrigin
 const allowedOrigins = [origin]
 
 const passkeyRoutes: FastifyPluginAsync = async (fastify) => {
-  const db = fastify.db as any
+  const db = fastify.db
   const andAny = and as any
   const eqAny = eq as any
 

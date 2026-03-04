@@ -64,6 +64,7 @@
   "repository": "marcopesani/brevet",
   "scripts": {
     "build": "shx rm -rf dist && tsc -b",
+    "check-types": "tsc --noEmit -p test/tsconfig.json",
     "lint": "eslint",
     "postpack": "shx rm -f oclif.manifest.json",
     "posttest": "pnpm run lint",

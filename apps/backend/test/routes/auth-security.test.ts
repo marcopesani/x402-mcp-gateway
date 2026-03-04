@@ -5,11 +5,12 @@ import cookie from '@fastify/cookie'
 import sensible from '@fastify/sensible'
 import { z } from 'zod'
 import { SiweMessage } from 'siwe'
+import type { DbForAuthRoutes } from '../../src/types/db'
 import passkeyRoutes from '../../src/routes/auth/passkey'
 import siwxRoutes from '../../src/routes/auth/siwx'
 
-const buildPasskeyDbMock = () => ({
-  transaction: async (callback: (tx: unknown) => Promise<unknown>) => callback(buildPasskeyDbMock()),
+const buildPasskeyDbMock = (): DbForAuthRoutes => ({
+  transaction: async <T>(callback: (tx: unknown) => Promise<T>) => callback(buildPasskeyDbMock()),
   select: () => ({
     from: () => ({
       innerJoin: () => ({
@@ -30,7 +31,8 @@ const buildPasskeyDbMock = () => ({
     set: () => ({
       where: async () => undefined
     })
-  })
+  }),
+  insert: () => ({ values: () => ({ onConflictDoNothing: async () => undefined }) })
 })
 
 test('passkey login rejects invalid cryptographic assertion', async () => {
@@ -70,8 +72,8 @@ test('passkey login rejects invalid cryptographic assertion', async () => {
   await app.close()
 })
 
-const buildSiwxDbMock = () => ({
-  transaction: async (callback: (tx: unknown) => Promise<unknown>) => callback(buildSiwxDbMock()),
+const buildSiwxDbMock = (): DbForAuthRoutes => ({
+  transaction: async <T>(callback: (tx: unknown) => Promise<T>) => callback(buildSiwxDbMock()),
   select: () => ({
     from: () => ({
       where: () => ({
@@ -90,7 +92,8 @@ const buildSiwxDbMock = () => ({
         returning: async () => ([{ id: 'used' }])
       })
     })
-  })
+  }),
+  insert: () => ({ values: () => ({ onConflictDoNothing: async () => undefined }) })
 })
 
 test('siwx link rejects nonce ownership mismatch', async () => {

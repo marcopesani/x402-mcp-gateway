@@ -19,7 +19,7 @@ import { logSecurityEvent } from '../../lib/security-log'
 const createCaip10 = (chainId: number, address: string) => `eip155:${chainId}:${address.toLowerCase()}`
 
 const siwxRoutes: FastifyPluginAsync = async (fastify) => {
-  const db = fastify.db as any
+  const db = fastify.db
   const andAny = and as any
   const eqAny = eq as any
   const gtAny = gt as any

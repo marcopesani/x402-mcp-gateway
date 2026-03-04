@@ -1,10 +1,11 @@
 import fp from 'fastify-plugin'
-import { createDb, type BrevetDb } from '@repo/db/client'
+import { createDb } from '@repo/db/client'
 import { resolvePostgresUrl } from '@repo/db/env'
+import type { DbForAuthRoutes } from '../types/db'
 
 declare module 'fastify' {
   export interface FastifyInstance {
-    db: BrevetDb
+    db: DbForAuthRoutes
     dbPool: unknown
   }
 }
