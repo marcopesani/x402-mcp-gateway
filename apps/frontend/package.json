@@ -8,10 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "check-types": "tsc --noEmit",
-    "test": "echo \"No frontend tests configured\"",
-    "test:e2e:cache": "synpress e2e/wallet-setup",
-    "test:e2e": "playwright test -c e2e/playwright.config.ts",
-    "test:e2e:headed": "playwright test -c e2e/playwright.config.ts --headed"
+    "test": "echo \"No frontend tests configured\""
   },
   "dependencies": {
     "@reown/appkit": "^1.8.18",
@@ -26,15 +23,12 @@
     "wagmi": "^2.14.9"
   },
   "devDependencies": {
-    "@playwright/test": "1.58.2",
-    "@synthetixio/synpress": "4.1.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "playwright": "1.58.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
