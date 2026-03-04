@@ -3,6 +3,10 @@
   "private": true,
   "scripts": {
     "dev": "docker compose up -d && docker compose logs -f postgres redis",
-    "stop": "docker compose down"
+    "stop": "docker compose down",
+    "build": "echo \"No infra build step\"",
+    "check-types": "echo \"No infra typecheck step\"",
+    "lint": "echo \"No infra lint step\"",
+    "test": "echo \"No infra tests configured\""
   }
 }

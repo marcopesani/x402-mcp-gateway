@@ -3,6 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
+  "scripts": {
+    "build": "echo \"No typescript-config build step\"",
+    "check-types": "echo \"No typescript-config typecheck step\"",
+    "lint": "echo \"No typescript-config lint step\"",
+    "test": "echo \"No typescript-config tests configured\""
+  },
   "publishConfig": {
     "access": "public"
   }

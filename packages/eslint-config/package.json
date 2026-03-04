@@ -8,6 +8,12 @@
     "./next-js": "./next.js",
     "./react-internal": "./react-internal.js"
   },
+  "scripts": {
+    "build": "echo \"No eslint-config build step\"",
+    "check-types": "echo \"No eslint-config typecheck step\"",
+    "lint": "echo \"No eslint-config lint step\"",
+    "test": "echo \"No eslint-config tests configured\""
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@next/eslint-plugin-next": "^15.5.0",

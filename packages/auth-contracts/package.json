@@ -1,0 +1,26 @@
+{
+  "name": "@repo/auth-contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./auth": "./src/auth.ts",
+    "./siwx": "./src/siwx.ts",
+    "./apiKeys": "./src/apiKeys.ts",
+    "./passkey": "./src/passkey.ts",
+    "./logging": "./src/logging.ts"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "check-types": "tsc --noEmit",
+    "lint": "pnpm run check-types",
+    "test": "echo \"No auth-contracts package tests configured\""
+  },
+  "dependencies": {
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "typescript": "5.9.2"
+  }
+}
