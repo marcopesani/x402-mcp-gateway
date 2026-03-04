@@ -16,6 +16,7 @@
 # next.js
 /.next/
 /out/
+/.cache-synpress/
 
 # production
 /build
@@ -39,3 +40,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# e2e
+e2e/playwright-report/
+e2e/test-results/
