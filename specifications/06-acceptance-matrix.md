@@ -1,0 +1,27 @@
+## 6. Acceptance Matrix
+
+This matrix defines the evidence expected for each area.
+
+| Area | Requirement IDs | Evidence required |
+|------|-----------------|------------------|
+| Auth message and nonce contract | `AUTH-F03` to `AUTH-F10`, `AUTH-F19`, `AUTH-NF01`, `SEC-05` | Unit tests for nonce issuance/consumption and signature verification, plus an end-to-end wallet-auth test proving the auth message contains domain, wallet address, nonce, timestamp, and chain ID. |
+| Session storage and inactivity expiry | `AUTH-F14`, `AUTH-NF03` to `AUTH-NF05`, `SEC-04` | Integration test plus database inspection proving only the token hash is stored, session tokens meet entropy requirements, and 30-day inactivity expiry is enforced. |
+| Account status access behavior | `AUTH-F20`, `MCP-F32`, `DASH-F18` | Integration tests covering `active`, `suspended`, and `closed` accounts across sign-in, MCP access, approval, and dashboard behavior. |
+| API key format, entropy, and storage | `KEY-F03` to `KEY-F05`, `KEY-NF01`, `KEY-NF04`, `SEC-03` | Unit tests for key generation format and entropy, plus database inspection proving only the key hash and non-sensitive prefix are stored. |
+| API key permissions and revocation | `KEY-F02`, `KEY-F07`, `KEY-F12`, `KEY-F14` | Permission tests for authorized vs unauthorized roles, integration tests for revocation, and a test that an already-open MCP session rejects subsequent calls after revocation. |
+| MCP auth contract and 401 behavior | `MCP-F01` to `MCP-F04`, `SEC-07` | Protocol-level integration tests showing `/mcp` accepts API-key bearer auth, returns 401 for missing/invalid keys, and includes protected-resource discovery metadata. |
+| MCP failure persistence policy | `MCP-F11` to `MCP-F14` | Integration tests for each deterministic error class proving the correct requests are persisted with `error_reason` and that `idempotency_conflict` does not create a new request. |
+| Ranking and payment-method selection | `MCP-F07` to `MCP-F10`, `PAD-F15` to `PAD-F17` | Domain tests that cover preferred-network ordering, budget filtering, exact tie-break precedence, and first-eligible account payment-method priority selection. |
+| x402 HTTP V1 and V2 compatibility | `MCP-F21` to `MCP-F26`, `PAD-F07` to `PAD-F13` | Fixture-backed parser/encoder tests for HTTP V1 and V2 plus cross-validation against the reference SDK for identical typed-data output. |
+| Status API completeness | `MCP-F18`, `MCP-F28` to `MCP-F31`, `DATA-03` | Integration tests proving `x402_payment_status` exposes approval visibility, proof arrays, settlement responses, and retained-vs-nullified delivery semantics. |
+| MCP performance and concurrency | `MCP-NF01` to `MCP-NF07` | Load test evidence for 1,000 concurrent MCP sessions, latency tests for 100ms status lookup, 30-second probe timeout tests, and proof that money logic does not use floating point. |
+| Dashboard behavior and browser support | `DASH-F01` to `DASH-F18`, `DASH-NF01` to `DASH-NF04` | Browser tests (e.g. Playwright) or frontend integration tests covering real-time or poll-driven updates, selected payment-method display, rejected approval visibility, expiry handling, mobile support, and latest-two-browser-version support. |
+| Settlement lifecycle and duplicate protection | `BCAST-F01` to `BCAST-F22`, `BCAST-NF01` to `BCAST-NF05` | Settlement job / worker integration tests covering enqueue-on-approval, duplicate-approval protection, 60-second timeout, 5s/15s/45s backoff, idempotent re-runs, and actual-fee persistence. |
+| Proof recovery and manual review | `BCAST-F11`, `BCAST-F21`, `DASH-F14`, `MCP-F18` | Integration tests proving proof receipt can precede settlement, recovery runs before any new payable attempt, and unresolved delivery moves the request to `manual_review`. |
+| Outbound request safety | `SEC-16` to `SEC-21`, `MCP-F05` | Security tests covering HTTPS-only enforcement, blocked private-network targets, forbidden header filtering, body-size limits, and TLS validation. |
+| Observability | `OBS-01` to `OBS-10`, `BCAST-F14`, `BCAST-F15` | Automated telemetry and structured-log assertions proving lifecycle events, latency measurements, recovery/manual-review events, and request-safety rejections are observable. |
+| Retention and nullification | `DATA-01` to `DATA-07`, `MCP-F31` | Scheduled-job tests proving 30-day delivery nullification, 90-day deletion cascade for dismissed/expired requests, and indefinite audit retention for settled requests and receipts. |
+| Deployment and migration safety | `DEPLOY-01` to `DEPLOY-07` | Build and deploy verification, horizontal-scale rehearsal, and migration sequencing tests showing forward compatibility for new credential, scope, review, and retention fields. |
+| Retry and requote | `RETRY-F01` to `RETRY-F15`, `RETRY-NF01`, `RETRY-NF02`, `SEC-12` | Domain and integration tests for persisted `pending_review`, budget re-validation, side-effect safeguards, and blocked retries when proof is unresolved. |
+| Notifications | `NOTIF-F01` to `NOTIF-F09`, `NOTIF-NF01`, `NOTIF-NF02` | Integration tests for asynchronous delivery, duplicate suppression, permission enforcement, retry handling, and the 30-second email SLA. |
+| Downstream x402-over-MCP codecs | `BCAST-F06`, `PAD-F09`, `PAD-F10` | Fixture-based transport codec tests for V1/V2 `_meta["x402/payment"]` and `_meta["x402/payment-response"]` carriers. |
