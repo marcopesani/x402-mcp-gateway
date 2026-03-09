@@ -50,7 +50,7 @@ Brevet does not custody user funds or private keys. All signing or payment autho
 | Database | PostgreSQL |
 | HTTP client | Standard fetch for outbound probe and settlement requests |
 | EVM wallet connectivity | Reown AppKit / WalletConnect |
-| Authentication abstraction | SIWX (Sign In With X, CAIP-122) via AppKit `siwx`; passkeys; account API keys; contracts in `@repo/auth-contracts` |
+| Authentication abstraction | SIWX (Sign In With X, CAIP-122) via AppKit `siwx`; passkeys (W3C WebAuthn and FIDO CTAP per [passkeys.dev specifications](https://passkeys.dev/docs/reference/specs/)); account API keys; contracts in `@repo/auth-contracts` |
 | EVM auth message | SIWE (Sign-In With Ethereum, EIP-4361) |
 | Settlement protocol | x402 |
 | Payment approval signing | EIP-712 typed data, EIP-3009 transferWithAuthorization |
@@ -61,7 +61,7 @@ Brevet does not custody user funds or private keys. All signing or payment autho
 | Dimension | Supported | Reserved |
 |-----------|-----------|----------|
 | Account type | Personal account | Organization / shared account |
-| Auth methods | EVM SIWX with Reown AppKit / WalletConnect (current `eip155` message flow: SIWE / EIP-4361) | Email/password, OAuth, Solana wallet auth, broader multichain SIWX |
+| Auth methods | EVM SIWX with Reown AppKit / WalletConnect (current `eip155` message flow: SIWE / EIP-4361); passkey (WebAuthn) for sign-in and account creation | Email/password, OAuth, Solana wallet auth, broader multichain SIWX |
 | Public MCP auth contract | `Authorization: Bearer <account_api_key>` | Token exchange, OAuth-backed bearer flows, or other managed auth contracts |
 | Payment methods | EVM wallet on Base and Base Sepolia, selected by account-wide priority order | More EVM wallets, Solana wallet, Lightning wallet/node |
 | Protocols | x402 exact scheme on EVM rails with explicit V1/V2 codec support | L402, LN402, additional x402 schemes |

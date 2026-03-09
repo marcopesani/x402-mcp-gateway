@@ -4,7 +4,7 @@
 
 - **Actor**: the human identity currently interacting with Brevet.
 - **Account**: the durable container that owns resources, billing context, settings, permissions, API keys, and payment history.
-- **Auth method**: a linked method that can authenticate an actor, such as an EVM SIWX wallet today and email/password or OAuth later.
+- **Auth method**: a linked method that can authenticate an actor, such as an EVM SIWX wallet, passkey (WebAuthn), and email/password or OAuth later.
 - **Payment method**: a linked instrument that can authorize payment on a specific network/protocol combination.
 - **Payment request**: the account-scoped intent created by an agent call.
 - **Payment option**: one normalized settlement path derived from a protected resource's payment requirements.
@@ -55,7 +55,7 @@ erDiagram
     auth_methods {
         uuid id PK
         uuid actor_id FK
-        string kind "siwe_wallet | email_password | oauth | solana_wallet"
+        string kind "siwe_wallet | passkey | email_password | oauth | solana_wallet"
         string identifier_hash UK
         string display_identifier
         boolean can_authenticate
@@ -65,6 +65,16 @@ erDiagram
         datetime last_used_at
         datetime created_at
         datetime updated_at
+    }
+
+    passkey_credentials {
+        uuid id PK
+        uuid auth_method_id FK
+        string credential_id UK
+        string public_key
+        integer counter
+        string transports
+        datetime created_at
     }
 
     account_sessions {
@@ -251,6 +261,7 @@ erDiagram
     actors ||--o{ account_memberships : "belongs_to"
     accounts ||--o{ account_memberships : "has"
     actors ||--o{ auth_methods : "links"
+    auth_methods ||--o{ passkey_credentials : "stores_for_passkey"
     accounts ||--o{ account_sessions : "has"
     actors ||--o{ account_sessions : "opens"
     accounts ||--o{ api_keys : "owns"
@@ -271,11 +282,11 @@ erDiagram
 
 **`actors` vs `accounts`**
 
-An actor is the person signing in. An account is the durable business object that owns API keys, payment methods, requests, and settings. The system creates a personal account automatically at first successful SIWX auth, but the schema must already support many auth methods per actor and many payment methods per account.
+An actor is the person signing in. An account is the durable business object that owns API keys, payment methods, requests, and settings. The system creates a personal account automatically at first successful SIWX auth or at first successful passkey registration (sign-up); the schema must already support many auth methods per actor and many payment methods per account.
 
 **`auth_methods`**
 
-An auth method is a linked login method. EVM SIWX is the only interactive auth flow. It currently uses a SIWE / EIP-4361-compatible message under `eip155`, but the account model remains SIWX-first so later wallet-auth flows can extend it without migrating the core account model.
+An auth method is a linked login method. EVM SIWX and passkey (WebAuthn) are supported interactive auth flows. SIWX currently uses a SIWE / EIP-4361-compatible message under `eip155`; passkey uses W3C WebAuthn attestation (registration) and assertion (sign-in), with credential data stored in `passkey_credentials` when `kind = passkey`. The account model supports both so later wallet-auth or other flows can extend it without migrating the core account model. Passkey auth methods are `can_authenticate` only and do not create a payment method; wallet-linked payment methods remain SIWX-backed unless later extended. Actors can link additional auth methods after account creation via a dedicated auth methods management surface, so the same account may be accessed with any linked method (passkey, SIWX, or future methods).
 
 **`api_keys`**
 

@@ -10,7 +10,11 @@ For personal accounts, the first successful SIWX auth acts as sign-up: Brevet cr
 
 Because Brevet owns actor, account, and session policy, the primary documented integration path is self-managed SIWX through `DefaultSIWX` with Brevet-controlled components or a full custom `SIWXConfig`. `ReownAuthentication` is a valid hosted alternative when Reown-managed session storage and dashboard visibility are desired. The legacy `siweConfig` API is migration-only and must not be configured at the same time as `siwx`.
 
+The system also supports sign-in and account creation via passkey (W3C [WebAuthn](https://passkeys.dev/docs/reference/specs/) and FIDO CTAP). Registration uses WebAuthn attestation; sign-in uses assertion. The server generates a challenge and binds it to the request (e.g. short-lived cookie or server-side store); attestation and assertion are verified server-side. On first successful passkey registration, Brevet creates the actor, a personal account, an owner membership, and an `auth_method` with `kind = passkey`; subsequent passkey authentication is sign-in and restores the same account-scoped session as SIWX. Passkey auth methods are for authentication only and do not create a payment method.
+
 Sessions are account-scoped, store only a session-token hash at rest, and expire after 30 days of inactivity. Account status also affects access: `active` accounts have full product access, `suspended` accounts are read-only for owners/admins, and `closed` accounts do not accept new sessions.
+
+After account creation, an actor may link additional auth methods to the same account so they can sign in with passkey, SIWX wallet, or (when supported) email/password or OAuth. The system must expose a dedicated auth methods management page (or equivalent authenticated surface) where the actor can view linked methods and add new ones; each new method must be verified (e.g. passkey attestation, SIWX signature, or password) before it is linked. This keeps the account identity unchanged regardless of which method is used to sign in.
 
 Documented AppKit shape:
 
@@ -30,6 +34,7 @@ stateDiagram-v2
     [*] --> LandingPage
     LandingPage --> SelectAuth: Click_sign_in
     SelectAuth --> ConnectWallet: Choose_EVM_wallet
+    SelectAuth --> ChoosePasskey: Choose_passkey
     SelectAuth --> FutureAuth: Choose_other_auth_method
     ConnectWallet --> CheckExistingSession: Wallet_connected
     CheckExistingSession --> Dashboard: Valid_SIWX_session_restored
@@ -37,12 +42,16 @@ stateDiagram-v2
     SigningMessage --> VerifySignature: Actor_signs_SIWX_message
     SigningMessage --> LandingPage: Actor_rejects
     VerifySignature --> CreateOrLoadActor: Signature_valid
+    VerifySignature --> ErrorState: Invalid_signature_or_nonce
+    ChoosePasskey --> PasskeyOptions: Request_options
+    PasskeyOptions --> PasskeyVerify: Client_attestation_or_assertion
+    PasskeyVerify --> CreateOrLoadActor: Verified
+    PasskeyVerify --> ErrorState: Verification_failed
     CreateOrLoadActor --> CreateOrLoadAccount: Resolve_personal_account
     CreateOrLoadAccount --> SessionCreated: Create_account_session
     SessionCreated --> Dashboard
     Dashboard --> SigningMessage: Connected_network_changes
     Dashboard --> LandingPage: Logout_or_disconnect
-    VerifySignature --> ErrorState: Invalid_signature_or_nonce
     ErrorState --> LandingPage: Retry
     FutureAuth --> [*]
 ```
@@ -71,6 +80,13 @@ stateDiagram-v2
 | AUTH-F18 | The system must allow a wallet-linked auth method to be marked `can_authenticate`, `can_pay`, or both. |
 | AUTH-F19 | The system must reject expired or replayed auth nonces. |
 | AUTH-F20 | `accounts.status = active` permits normal sign-in; `suspended` permits read-only owner/admin access only; `closed` denies new sessions and must invalidate existing account sessions. |
+| AUTH-F21 | For passkey registration, the server must generate WebAuthn registration options (including a challenge), and the client must perform attestation; the server must verify the attestation and store the credential (e.g. in `passkey_credentials`). The challenge must be single-use and bound to a short TTL (e.g. 5 minutes). |
+| AUTH-F22 | For passkey authentication, the server must generate WebAuthn authentication options (challenge), and the client must perform assertion; the server must verify the assertion and resolve the actor, account, and session. The challenge must be single-use and bound to a short TTL. |
+| AUTH-F23 | On first successful passkey registration (sign-up), the system must create the actor, a personal account, an owner membership, and an `auth_method` with `kind = passkey`; the passkey auth method must be `can_authenticate` only unless later extended for payment. |
+| AUTH-F24 | On successful passkey verification (sign-in or sign-up), the system must create an account-scoped session token, store only its hash, and send the raw token as a signed cookie, in the same way as SIWX. |
+| AUTH-F25 | The system must allow an actor to link a passkey as an additional auth method when already authenticated (e.g. via SIWX or another passkey). |
+| AUTH-F26 | The system must provide a dedicated auth methods management page (or equivalent authenticated surface) where the actor can view the auth methods linked to their account and add new ones. Supported methods for linking must include passkey and SIWX (and, when implemented, email/password and OAuth). Adding a method must require successful verification of that method and must associate it with the same actor/account without changing account identity. |
+| AUTH-F27 | The system must not allow unlinking an auth method if that would leave the account with no remaining way to sign in (e.g. require at least one linked auth method, or enforce an equivalent safeguard so the actor cannot lock themselves out). |
 
 #### 4.1.4 Non-functional requirements
 
@@ -82,6 +98,7 @@ stateDiagram-v2
 | AUTH-NF04 | Raw session tokens must never be persisted. |
 | AUTH-NF05 | Sessions must expire after 30 days of inactivity. |
 | AUTH-NF06 | The auth domain layer must not assume that every actor has exactly one wallet or that every wallet belongs to exactly one account forever. |
+| AUTH-NF07 | Passkey registration and authentication challenges must be single-use and expire within 5 minutes. Passkey implementation must align with W3C WebAuthn Level 2 and FIDO CTAP 2.2 (or current versions per [passkeys.dev specifications](https://passkeys.dev/docs/reference/specs/)). |
 
 #### 4.1.5 Definition of Done
 
@@ -104,6 +121,12 @@ stateDiagram-v2
 - [ ] Domain test: Base and Base Sepolia payment methods remain distinct.
 - [ ] E2E test: full SIWX signup flow with a test wallet.
 - [ ] E2E test: login flow for an existing actor/account pair using a restored or renewed SIWX session.
+- [ ] First successful passkey registration (sign-up) creates actor, personal account, owner membership, and auth method with `can_authenticate` only.
+- [ ] Passkey sign-in (assertion) restores account-scoped session; session cookie and hash-only storage match SIWX behavior.
+- [ ] Passkey registration and authentication challenges are single-use and expire within the required TTL (e.g. 5 minutes).
+- [ ] E2E or manual test: passkey sign-up and sign-in flow.
+- [ ] Dedicated auth methods page (or section) is available when authenticated; actor can view linked methods and add passkey or SIWX (and other supported methods when implemented); verification is required before a new method is linked.
+- [ ] Unlink is only allowed when at least one other auth method remains (or equivalent safeguard).
 
 ---
 
